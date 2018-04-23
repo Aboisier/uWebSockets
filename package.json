@@ -1,10 +1,4 @@
 {
-  "_args": [
-    [
-      "uws@0.14.5",
-      "C:\\prism\\rpi-client\\server"
-    ]
-  ],
   "_from": "uws@0.14.5",
   "_id": "uws@0.14.5",
   "_inBundle": false,

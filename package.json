@@ -53,7 +53,7 @@
     "url": "git+https://github.com/uWebSockets/uWebSockets.git"
   },
   "scripts": {
-    "install": "node-gyp rebuild > build_log.txt 2>&1 || exit 0"
+    "install": "echo \"This version was precompiled and does not require node-gyp\""
   },
   "version": "0.14.5"
 }

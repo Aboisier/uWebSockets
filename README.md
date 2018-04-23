@@ -1,38 +1,32 @@
-<div align="center"><img src="misc/images/logo.png"/></div>
+## Usage
+`uws` tries to mimic `ws` as closely as possible without sacrificing too much performance. In most cases you simply swap `require('ws')` with `require('uws')`:
 
-µWS ("[micro](https://en.wikipedia.org/wiki/Micro-)WS") is a WebSocket and HTTP implementation for clients and servers. Simple, efficient and lightweight.
+```javascript
+var WebSocketServer = require('uws').Server;
+var wss = new WebSocketServer({ port: 3000 });
 
-[Wiki pages & user manual](https://github.com/uNetworking/uWebSockets/wiki/User-manual-v0.14.x)
-
-#### Build optimized WebSocket & HTTP servers & clients in no time.
-```c++
-#include <uWS/uWS.h>
-using namespace uWS;
-
-int main() {
-    Hub h;
-    std::string response = "Hello!";
-
-    h.onMessage([](WebSocket<SERVER> *ws, char *message, size_t length, OpCode opCode) {
-        ws->send(message, length, opCode);
-    });
-
-    h.onHttpRequest([&](HttpResponse *res, HttpRequest req, char *data, size_t length,
-                        size_t remainingBytes) {
-        res->end(response.data(), response.length());
-    });
-
-    if (h.listen(3000)) {
-        h.run();
-    }
+function onMessage(message) {
+    console.log('received: ' + message);
 }
+
+wss.on('connection', function(ws) {
+    ws.on('message', onMessage);
+    ws.send('something');
+});
 ```
 
-#### Excel across the board.
-<div align="center"><img src="misc/images/overview.png"/></div>
+##### Deviations from ws
+There are some important incompatibilities with `ws` though, we aim to be ~90% compatible but will never implement behavior that is deemed too inefficient:
 
-#### Fast does not imply broken.
-Gracefully passes the [entire Autobahn fuzzing test suite](http://htmlpreview.github.io/?https://github.com/uNetworking/uWebSockets/blob/master/misc/autobahn/index.html) with no failures or Valgrind/ASAN errors. With or without SSL/permessage-deflate.
+* Binary data is passed zero-copy as an `ArrayBuffer`. This means you need to copy it to keep it past the callback. It also means you need to convert it with `Buffer.from(message)` if you expect a `Node.js Buffer`.
+* `webSocket._socket` is not a `net.Socket`, it is just a getter function with very basic functionalities.
+* `webSocket._socket.remote...` might fail, you need to cache it at connection.
+* `webSocket` acts like an `EventEmitter` with one listener per event maximum.
+* `webSocket.upgradeReq` is only valid during execution of the connection handler. If you want to keep properties of the upgradeReq for the entire lifetime of the webSocket you better attach that specific property to the webSocket at connection.
 
-#### Freely available.
-An open source ([Zlib](LICENSE)) hobby project of [mine](https://github.com/alexhultman) since 2016. Sponsored by [BitMEX.com](https://bitmex.com) since 2018.
+## Installation
+[![](https://nodei.co/npm/uws.png)](https://www.npmjs.com/package/uws)
+
+At installation `uws` will try to recompile itself using the system's C++11 compiler (GCC 4.8+, Clang 3.3, VC++ 2015+).
+If this fails it will silently fall back to using the precompiled binaries.
+NPM installation will never fail but `require('uws')` will throw if it cannot properly load the binary module.
